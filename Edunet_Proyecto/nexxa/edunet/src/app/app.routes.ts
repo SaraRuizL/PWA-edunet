@@ -1,10 +1,15 @@
 import { Routes } from '@angular/router';
+import { QrScannerComponent } from './qr-scanner/qr-scanner';
 import { ProfesorGuard } from './profesor/guards/profesor.guard';
 import { AdminGuard } from './admin/guards/admin.guard';
 import { TutoresGuard } from './tutores/guards/tutores.guard';
 import { EstudiantesGuard } from './estudiantes/guards/estudiante.guard';
 
 export const routes: Routes = [
+    {
+        path: 'qr-scanner',
+        component: QrScannerComponent
+    },
     {
         path: 'admin',
         loadComponent: () => import('./admin/layout/admin-layout.component').then(m => m.AdminLayoutComponent),

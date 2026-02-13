@@ -258,4 +258,82 @@ export class AsistenciaController {
       conn.release();
     }
   }
+
+  public async registrarAsistenciaQr(req: Request, res: Response): Promise<void> {
+    const conn = await connection.getConnection();
+    try {
+      const { qrData } = req.body;
+
+      if (!qrData) {
+        res.status(400).json({
+          message: "Formato inválido",
+          details: "qrData es requerido"
+        });
+        return;
+      }
+
+      const { idClase, idEstudiante, timestamp } = JSON.parse(qrData);
+
+      const [clase]: any = await conn.execute(
+        "SELECT idClase, idCurso, fecha, hora_inicio, hora_fin FROM clases WHERE idClase = ?",
+        [idClase]
+      );
+
+      if (!clase[0]) {
+        res.status(404).json({
+          message: "Clase no encontrada"
+        });
+        return;
+      }
+
+      const [estudiante]: any = await conn.execute(
+        "SELECT idUsuarios FROM usuarios WHERE idUsuarios = ? AND idRol = 1",
+        [idEstudiante]
+      );
+
+      if (!estudiante[0]) {
+        res.status(404).json({
+          message: "Estudiante no encontrado"
+        });
+        return;
+      }
+
+      const now = new Date();
+      const qrTimestamp = new Date(timestamp);
+
+      if (now.getTime() - qrTimestamp.getTime() > 60000) {
+        res.status(400).json({
+          message: "Código QR expirado"
+        });
+        return;
+      }
+
+      await conn.execute(
+        `INSERT INTO asistencia
+         (idClase, idEstudiante, estado, observaciones)
+         VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+         estado = VALUES(estado),
+         observaciones = VALUES(observaciones)`,
+        [
+          idClase,
+          idEstudiante,
+          'presente',
+          'Asistencia registrada por QR'
+        ]
+      );
+
+      res.json({
+        message: "Asistencia registrada correctamente"
+      });
+    } catch (error: any) {
+      console.error("Error en registrarAsistenciaQr:", error);
+      res.status(500).json({
+        message: "Error interno del servidor",
+        details: error.message
+      });
+    } finally {
+      conn.release();
+    }
+  }
 }

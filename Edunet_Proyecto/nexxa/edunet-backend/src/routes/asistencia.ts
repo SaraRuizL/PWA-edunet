@@ -11,6 +11,7 @@ router.use(authMiddleware);
 
 // Rutas
 // Profesor / Admin
+router.post('/', authorize('profesor', 'administrador'), (req, res) => asistenciaController.registrarAsistenciaQr(req, res));
 router.post('/clase/:idClase', authorize('profesor', 'administrador'), (req, res) => asistenciaController.registrarAsistencia(req, res));
 router.get('/clase/:idClase', authorize('profesor', 'administrador'), (req, res) => asistenciaController.getAsistenciaClase(req, res));
 router.get('/curso/:idCurso/reporte', authorize('profesor', 'administrador'), (req, res) => asistenciaController.getReporteAsistenciaCurso(req, res));
